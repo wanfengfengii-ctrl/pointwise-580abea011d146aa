@@ -3,6 +3,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from sqlite3 import Connection
 
+from ledger.shiftbook import record_event
 from ledger.store import (CustodyRecord, UnconfirmedCustody, custody_transaction,
                           load_custody_record, load_evidence_custody)
 from review.candidates import Assignment
@@ -53,4 +54,5 @@ def claim_assignment(path: Path, request_id: str, batch_id: str, parameters: str
         ))
         db.executemany('INSERT INTO evidence_claims (evidence_id, request_id, slot) VALUES (?, ?, ?)',
                        ((key, request_id, slot) for slot, key in assignment))
+        record_event(db, 'hold', request_id, batch_id, None, assignment)
         return CustodyRecord(request_id, batch_id, parameters, 'held', assignment, None)

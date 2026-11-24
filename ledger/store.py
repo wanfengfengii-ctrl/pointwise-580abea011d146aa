@@ -61,6 +61,23 @@ def initialize_ledger_store(db: sqlite3.Connection) -> None:
     )''')
     db.execute('''CREATE INDEX IF NOT EXISTS custody_batch_state
                   ON custody_requests(batch_id, state, request_id)''')
+    db.execute('''CREATE TABLE IF NOT EXISTS custody_events (
+        seq INTEGER PRIMARY KEY AUTOINCREMENT,
+        request_id TEXT NOT NULL,
+        batch_id TEXT NOT NULL,
+        kind TEXT NOT NULL CHECK (kind IN ('hold', 'issue', 'release')),
+        report_id TEXT,
+        lines TEXT NOT NULL
+    )''')
+    db.execute('''CREATE TABLE IF NOT EXISTS shifts (
+        shift_id TEXT PRIMARY KEY,
+        batch_id TEXT NOT NULL,
+        opened_seq INTEGER NOT NULL,
+        opening_balance TEXT NOT NULL,
+        evidence TEXT NOT NULL,
+        closed_seq INTEGER,
+        closing_balance TEXT
+    )''')
 
 
 def pin_custody_snapshot(db: sqlite3.Connection) -> None:

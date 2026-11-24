@@ -4,6 +4,7 @@ from sqlite3 import Connection
 
 from ledger.claims import verify_claims
 from ledger.recovery import recover_custody
+from ledger.shiftbook import record_event
 from ledger.store import CustodyRecord, UnconfirmedCustody, custody_transaction, load_custody_record
 from review.candidates import Assignment
 
@@ -26,6 +27,7 @@ def settle_assignment(path: Path, request_id: str, batch_id: str, parameters: st
             return 'issued', False
         db.execute('UPDATE custody_requests SET state = ?, report_id = ? WHERE request_id = ?',
                    ('issued', report_id, request_id))
+        record_event(db, 'issue', request_id, record.batch_id, report_id, record.assignment)
         if before_commit is not None:
             before_commit()
         return 'issued', True

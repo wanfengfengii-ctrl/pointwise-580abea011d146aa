@@ -61,6 +61,11 @@ def initialize_archive_store(db: sqlite3.Connection) -> None:
         report_id TEXT PRIMARY KEY REFERENCES prepared_reports(report_id),
         receipt TEXT NOT NULL
     )''')
+    db.execute('''CREATE TABLE IF NOT EXISTS shift_statements (
+        shift_id TEXT PRIMARY KEY,
+        batch_id TEXT NOT NULL,
+        statement TEXT NOT NULL
+    )''')
 
 
 def save_request_binding(db: sqlite3.Connection, binding: RequestBinding) -> RequestBinding:
@@ -110,3 +115,15 @@ def load_report_material(db: sqlite3.Connection, report_id: str) -> PreparedRepo
 def load_receipt_record(db: sqlite3.Connection, report_id: str) -> dict | None:
     row = db.execute('SELECT receipt FROM first_receipts WHERE report_id = ?', (report_id,)).fetchone()
     return None if row is None else json.loads(row['receipt'])
+
+
+def save_shift_statement(db: sqlite3.Connection, shift_id: str, batch_id: str,
+                         statement: dict) -> None:
+    db.execute('INSERT INTO shift_statements VALUES (?, ?, ?) ON CONFLICT(shift_id) DO NOTHING',
+               (shift_id, batch_id, json.dumps(statement, separators=(',', ':'))))
+
+
+def load_shift_statement(db: sqlite3.Connection, shift_id: str) -> dict | None:
+    row = db.execute('SELECT statement FROM shift_statements WHERE shift_id = ?',
+                     (shift_id,)).fetchone()
+    return None if row is None else json.loads(row['statement'])

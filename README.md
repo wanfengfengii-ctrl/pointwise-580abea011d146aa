@@ -22,6 +22,7 @@ python3 -B demo.py
 - `ledger.cancel.cancel(stores, batch_id, request_id, slots)` 使用原参数。返回 `cancelled`、`already_signed`、`unknown_request`、`request_conflict` 或 `pending`。签发与撤办只有一个终局；已签报告的凭据保持永久核销。
 - `archive.readback.read(stores, report_id)` 按 `R-` 加请求号定位报告。`signed` 含 `lines`、`receipt`、`report_id`、`request_id` 和 `batch_id`，也是签发成功的结果格式。每条明细包含格号、凭据身份、准确修订、读数和原件出处。`unknown_report`、`not_signed`、`cancelled` 和 `pending` 均无正式明细及首执。`sign`、`cancel` 和 `read` 均用结果字典的 `status` 字段表示业务状态。
 - `audit.shift.audit(stores, batch_id, report_id=None)` 返回逐凭据状态、余额、待确认请求和可选的逐格报告核对。每份修订至多计一次，非正式报告不产生逐格账。报告属于另一批时返回 `batch_mismatch`。余额类别为 `used`、`available`、`held`、`missing`、`ineligible` 和 `unconfirmed`。台账暂不可读时返回 `pending`，仅报告可由冻结快照确认的分类，余下凭据单列待确认。
+- `audit.shift` 另提供班次差额账：`open_shift(stores, batch_id, shift_id)` 为已冻结批登记班次并固定期初，同批可交叠多班；`close_shift(stores, shift_id)` 仅凭已登记班次和台账固定期末，归档文件无法打开时也可结班；`seal_shift(stores, shift_id)` 为已结班次出单，交付两界分类余额、按台账提交顺序的变动和首执；`read_shift(stores, shift_id)` 按班次号领取已保存的出单。变动口径、事件格式与拒绝条件见 `SHIFTS.md`。
 
 签发的可选同步 `checkpoint(stage)` 供测试与调用方观察工作进度。阶段为 `before_claim`、`after_prepare`、`before_commit` 和 `after_commit`。回调可用 `ConfirmationInterrupted` 模拟该处中断，调用方得到 `pending`。`before_commit` 处事务仍打开，回调用于观测或中断。重开时用同一目录和原请求参数。
 

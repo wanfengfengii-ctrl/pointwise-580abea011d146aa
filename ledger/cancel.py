@@ -4,6 +4,7 @@ from sqlite3 import OperationalError
 from archive.prepare import make_request_binding
 from archive.store import Stores, archive_transaction, load_request_binding
 from ledger.recovery import recover_custody
+from ledger.shiftbook import record_event
 from ledger.store import UnconfirmedCustody, custody_transaction
 from review.candidates import RequestSlot
 
@@ -29,6 +30,7 @@ def cancel(stores: Stores, batch_id: str, request_id: str, slots: Iterable[Reque
                 db.execute('DELETE FROM evidence_claims WHERE request_id = ?', (request_id,))
                 db.execute('UPDATE custody_requests SET state = ? WHERE request_id = ?',
                            ('cancelled', request_id))
+                record_event(db, 'release', request_id, record.batch_id, None, record.assignment)
         return {'status': 'cancelled', 'request_id': request_id}
     except (OperationalError, UnconfirmedCustody):
         return {'status': 'pending', 'request_id': request_id}
